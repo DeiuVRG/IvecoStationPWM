@@ -1,0 +1,57 @@
+// ===================== CONFIG PINI =====================
+int RPWM = 5;   // PWM "dreapta" (OC0B)
+int LPWM = 6;   // PWM "stânga" (OC0A)
+int L_EN = 7;   // Enable canal stânga
+int R_EN = 8;   // Enable canal dreapta
+
+// Variabila unică pentru setarea duty cycle-ului în procente (0-100; 50 = 50%)
+int dutyCyclePercent = 5;
+
+void setup() {
+  // Configurăm pinii ca OUTPUT
+  pinMode(RPWM, OUTPUT);
+  pinMode(LPWM, OUTPUT);
+  pinMode(L_EN, OUTPUT);
+  pinMode(R_EN, OUTPUT);
+  
+  // Activăm ambele canale
+  digitalWrite(L_EN, HIGH);
+  digitalWrite(R_EN, HIGH);
+  
+  // Resetăm configurația Timer0
+  TCCR0A = 0;
+  TCCR0B = 0;
+  
+  // Configurăm Timer0 în modul Fast PWM (TOP = 255)
+  TCCR0A |= (1 << WGM00) | (1 << WGM01);
+  
+  // Configurăm ieșirile PWM:
+  // - OC0A (pin 6) în mod non-inverting (pornire HIGH)
+  TCCR0A |= (1 << COM0A1);
+  // - OC0B (pin 5) în mod inverting (pornire LOW)
+  TCCR0A |= (1 << COM0B1) | (1 << COM0B0);
+  
+  // Setăm prescaler la 64 => PWM ~1 kHz (16MHz / (64 * 256) ≈ 976 Hz)
+  TCCR0B |= (1 << CS01) | (1 << CS00);
+  
+  // Calculăm valoarea PWM pe baza procentului (0-100) pentru scale 0-255:
+  int pwmValue = (dutyCyclePercent * 255) / 100;
+  OCR0A = pwmValue;
+  OCR0B = pwmValue;
+  
+  Serial.begin(9600);
+  Serial.print("PWM complementar: Duty Cycle = ");
+  Serial.print(dutyCyclePercent);
+  Serial.println("%, ~1kHz");
+}
+
+void loop() {
+  // PWM-ul hardware rulează continuu.
+  // Pentru a modifica dutyCycle-ul, actualizează dutyCyclePercent și recalculează pwmValue:
+  // dutyCyclePercent = <noua valoare de la 0 la 100>;
+  // int pwmValue = (dutyCyclePercent * 255) / 100;
+  // OCR0A = pwmValue;
+  // OCR0B = pwmValue;
+  
+  delay(5000);
+}
